@@ -39,12 +39,12 @@
             background-color: white;
             -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
             filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
-            padding: 50px;
+            padding: 15px;
             border-radius: 10px;
             border: 1px solid #cccccc;
-            bottom: 30spx;
-            left: 10px;
-            min-width: 280px;
+            bottom: 12px;
+            left: -50px;
+            min-width: 180px;
         }
 
         .ol-popup:after,
@@ -86,19 +86,22 @@
 </head>
 
 <body onload="initialize_map();">
+
     <table>
+
         <tr>
+
             <td>
                 <div id="map" class="map"></div>
                 <div id="map" style="width: 50vw; height: 50vh;"></div>
                 <div id="popup" class="ol-popup">
                     <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                    <div id="info"></div>
+                    <div id="popup-content"></div>
                 </div>
                 <!--<div id="map" style="width: 80vw; height: 100vh;"></div>-->
             </td>
             <td>
-                
+
                 <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" value="Bike"> Thuy Dien<br>
                 <input onclick="oncheckriver();" type="checkbox" id="river" value="Bike"> Song <br>
                 <input onclick="oncheckvn();" type="checkbox" id="vn" value="Bike" checked> Viet Nam<br>
@@ -124,6 +127,31 @@
         var layerCMR_adm1;
         var layer_river;
         var layer_hydropower;
+
+        var container = document.getElementById('popup');
+        var content = document.getElementById('popup-content');
+        var closer = document.getElementById('popup-closer');
+        /**
+         * Create an overlay to anchor the popup to the map.
+         */
+        var overlay = new ol.Overlay( /** @type {olx.OverlayOptions} */ ({
+            element: container,
+            autoPan: true,
+            autoPanAnimation: {
+                duration: 250
+            }
+        }));
+
+        closer.onclick = function() {
+            overlay.setPosition(undefined);
+            closer.blur();
+            return false;
+        };
+
+        function myFunction() {
+            var popup = document.getElementById("popup");
+            popup.classList.toggle("show");
+        }
 
         function oncheckhydropower() {
             if (document.getElementById('hydropower').checked) {
@@ -215,7 +243,8 @@
                 target: "map",
                 layers: [layerBG, layerCMR_adm1],
                 //layers: [layerCMR_adm1],
-                view: viewMap
+                view: viewMap,
+                overlays: [overlay], //them khai bao overlays
             });
             //map.getView().fit(bounds, map.getSize());
 
@@ -298,7 +327,9 @@
             function displayObjInfo(result, coordinate) {
                 // alert("result: " + result);
                 //alert("coordinate des: " + coordinate);
-                $("#info").html(result);
+                $("#popup-content").html(result);
+                overlay.setPosition(coordinate);
+
             }
             map.on('singleclick', function(evt) {
                 // alert("coordinate: " + evt.coordinate);
