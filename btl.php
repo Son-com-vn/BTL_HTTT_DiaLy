@@ -102,9 +102,9 @@
             </td>
             <td>
 
-                <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" value="Bike"> Thuy Dien<br>
-                <input onclick="oncheckriver();" type="checkbox" id="river" value="Bike"> Song <br>
-                <input onclick="oncheckvn();" type="checkbox" id="vn" value="Bike" checked> Viet Nam<br>
+                <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" name="layer" value="hydropower"> Thuy Dien<br>
+                <input onclick="oncheckriver();" type="checkbox" id="river" name="layer" value="river"> Song <br>
+                <input onclick="oncheckvn();" type="checkbox" id="vn" name="layer" value="vn" checked> Viet Nam<br>
 
 
             </td>
@@ -127,10 +127,11 @@
         var layerCMR_adm1;
         var layer_river;
         var layer_hydropower;
-
+        var vectorLayer;
         var container = document.getElementById('popup');
         var content = document.getElementById('popup-content');
         var closer = document.getElementById('popup-closer');
+        var value = document.getElementById("vn").value;
         /**
          * Create an overlay to anchor the popup to the map.
          */
@@ -148,39 +149,38 @@
             return false;
         };
 
+        function handleOnCheck(id, layer) {
+
+            if (document.getElementById(id).checked) {
+                value = document.getElementById(id).value;
+                // map.setLayerGroup(new ol.layer.Group())
+                map.addLayer(layer)
+                vectorLayer = new ol.layer.Vector({});
+                map.addLayer(vectorLayer);
+            } else {
+                map.removeLayer(layer);
+                map.removeLayer(vectorLayer);
+            }
+        }
+
         function myFunction() {
             var popup = document.getElementById("popup");
             popup.classList.toggle("show");
         }
 
         function oncheckhydropower() {
-            if (document.getElementById('hydropower').checked) {
-                map.addLayer(layer_hydropower)
+            handleOnCheck('hydropower', layer_hydropower);
 
-            } else {
-                map.removeLayer(layer_hydropower);
-            }
         }
 
         function oncheckriver() {
-            if (document.getElementById('river').checked) {
-                map.addLayer(layer_river)
+            handleOnCheck('river', layer_river);
 
-            } else {
-                map.removeLayer(layer_river);
-            }
         }
 
 
         function oncheckvn() {
-
-            if (document.getElementById('vn').checked) {
-                map.addLayer(layerCMR_adm1)
-
-            } else {
-                map.removeLayer(layerCMR_adm1);
-            }
-
+            handleOnCheck('vn', layerCMR_adm1);
         }
 
         function initialize_map() {
@@ -249,6 +249,24 @@
             //map.getView().fit(bounds, map.getSize());
 
             var styles = {
+                'Point': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'yellow',
+                        width: 3
+                    })
+                }),
+                'MultiLineString': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'yellow',
+                        width: 3
+                    })
+                }),
+                'Polygon': new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: 'yellow',
+                        width: 3
+                    })
+                }),
                 'MultiPolygon': new ol.style.Style({
                     fill: new ol.style.Fill({
                         color: 'orange'
@@ -262,11 +280,19 @@
             var styleFunction = function(feature) {
                 return styles[feature.getGeometry().getType()];
             };
-            var vectorLayer = new ol.layer.Vector({
+            var stylePoint = new ol.style.Style({
+                image: new ol.style.Icon({
+                    anchor: [0.5, 0.5],
+                    anchorXUnits: "fraction",
+                    anchorYUnits: "fraction",
+                    src: "http://localhost:8081/BTL_HTTT_DiaLy/Yellow_dot.svg"
+                })
+            });
+            vectorLayer = new ol.layer.Vector({
                 //source: vectorSource,
                 style: styleFunction
             });
-            // map.addLayer(vectorLayer);
+            map.addLayer(vectorLayer);
 
             function createJsonObj(result) {
                 var geojsonObject = '{' +
@@ -285,19 +311,6 @@
                 return geojsonObject;
             }
 
-            function drawGeoJsonObj(paObjJson) {
-                var vectorSource = new ol.source.Vector({
-                    features: (new ol.format.GeoJSON()).readFeatures(paObjJson, {
-                        dataProjection: 'EPSG:4326',
-                        featureProjection: 'EPSG:3857'
-                    })
-                });
-                var vectorLayer = new ol.layer.Vector({
-                    source: vectorSource
-                });
-                map.addLayer(vectorLayer);
-            }
-
             function highLightGeoJsonObj(paObjJson) {
                 var vectorSource = new ol.source.Vector({
                     features: (new ol.format.GeoJSON()).readFeatures(paObjJson, {
@@ -314,15 +327,15 @@
                 */
             }
 
-            // function highLightObj(result) {
-            //     alert("result: " + result);
-            //     var strObjJson = createJsonObj(result);
-            //     //alert(strObjJson);
-            //     var objJson = JSON.parse(strObjJson);
-            //     alert(JSON.stringify(objJson));
-            //     drawGeoJsonObj(objJson);
-            //     highLightGeoJsonObj(objJson);
-            // }
+            function highLightObj(result) {
+                // alert("result: " + result);
+                var strObjJson = createJsonObj(result);
+                //alert(strObjJson);
+                var objJson = JSON.parse(strObjJson);
+                //alert(JSON.stringify(objJson));
+                //drawGeoJsonObj(objJson);
+                highLightGeoJsonObj(objJson);
+            }
 
             function displayObjInfo(result, coordinate) {
                 // alert("result: " + result);
@@ -331,48 +344,105 @@
                 overlay.setPosition(coordinate);
 
             }
+
             map.on('singleclick', function(evt) {
+
                 // alert("coordinate: " + evt.coordinate);
                 var myPoint = 'POINT(12,5)';
                 var lonlat = ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
                 var lon = lonlat[0];
                 var lat = lonlat[1];
                 var myPoint = 'POINT(' + lon + ' ' + lat + ')';
-                // alert("myPoint: " + myPoint);
-                //*
-                // $.ajax({
-                //     type: "POST",
-                //     url: "CMR_pgsqlAPI.php",
-                //     //dataType: 'json',
-                //     data: {
-                //         functionname: 'getGeoCMRToAjax',
-                //         paPoint: myPoint
-                //     },
-                //     success: function(result, status, erro) {
-                //         highLightObj(result);
-                //     },
-                //     error: function(req, status, error) {
-                //         alert(req + " " + status + " " + error);
-                //     }
-                // });
-                //*/
 
-                $.ajax({
-                    type: "POST",
-                    url: "CMR_pgsqlAPI.php",
-                    // dataType: 'json',
-                    // data: {functionname: 'reponseGeoToAjax', paPoint: myPoint},
-                    data: {
-                        functionname: 'getInfoCMRToAjax',
-                        paPoint: myPoint
-                    },
-                    success: function(result, status, erro) {
-                        displayObjInfo(result, evt.coordinate);
-                    },
-                    error: function(req, status, error) {
-                        alert(req + " " + status + " " + error);
-                    }
-                });
+                if (value == 'vn') {
+                    vectorLayer.setStyle(styleFunction);
+
+                    $.ajax({
+                        type: "POST",
+                        url: "CMR_pgsqlAPI.php",
+                        // dataType: 'json',
+                        // data: {functionname: 'reponseGeoToAjax', paPoint: myPoint},
+                        data: {
+                            functionname: 'getInfoCMRToAjax',
+                            paPoint: myPoint
+                        },
+                        success: function(result, status, erro) {
+                            displayObjInfo(result, evt.coordinate);
+                        },
+                        error: function(req, status, error) {
+                            alert(req + " " + status + " " + error);
+                        }
+                    });
+                    $.ajax({
+                        type: "POST",
+                        url: "CMR_pgsqlAPI.php",
+                        //dataType: 'json',
+                        data: {
+                            functionname: 'getGeoCMRToAjax',
+                            paPoint: myPoint
+                        },
+                        success: function(result, status, erro) {
+                            highLightObj(result);
+                        },
+                        error: function(req, status, error) {
+                            alert(req + " " + status + " " + error);
+                        }
+                    });
+                } else if (value == "river") {
+                    //river
+
+                    $.ajax({
+                        type: "POST",
+                        url: "CMR_pgsqlAPI.php",
+                        // dataType: 'json',
+                        // data: {functionname: 'reponseGeoToAjax', paPoint: myPoint},
+                        data: {
+                            functionname: 'getInfoRiveroAjax',
+                            paPoint: myPoint
+                        },
+                        success: function(result, status, erro) {
+                            displayObjInfo(result, evt.coordinate);
+                        },
+                        error: function(req, status, error) {
+                            alert(req + " " + status + " " + error);
+                        }
+                    });
+                } else if (value == "hydropower") {
+                    vectorLayer.setStyle(stylePoint);
+
+                    $.ajax({
+                        type: "POST",
+                        url: "CMR_pgsqlAPI.php",
+                        // dataType: 'json',
+                        // data: {functionname: 'reponseGeoToAjax', paPoint: myPoint},
+                        data: {
+                            functionname: 'getInfoHyproPowerToAjax',
+                            paPoint: myPoint
+                        },
+                        success: function(result, status, erro) {
+                            displayObjInfo(result, evt.coordinate);
+                        },
+                        error: function(req, status, error) {
+                            alert(req + " " + status + " " + error);
+                        }
+                    });
+
+                    $.ajax({
+                        type: "POST",
+                        url: "CMR_pgsqlAPI.php",
+                        //dataType: 'json',
+                        data: {
+                            functionname: 'getGeoEagleToAjax',
+                            paPoint: myPoint
+                        },
+                        success: function(result, status, erro) {
+                            highLightObj(result);
+                        },
+                        error: function(req, status, error) {
+                            alert(req + " " + status + " " + error);
+                        }
+                    });
+                }
             });
 
         };
