@@ -3,6 +3,7 @@ if (isset($_POST['functionname'])) {
     $paPDO = initDB();
     $paSRID = '4326';
     $paPoint = $_POST['paPoint'];
+    // $name = $_POST['name'];
     $functionname = $_POST['functionname'];
 
     $aResult = "null";
@@ -18,6 +19,8 @@ if (isset($_POST['functionname'])) {
         $aResult = getGeoEagleToAjax($paPDO, $paSRID, $paPoint);
     else if ($functionname == 'getRiverToAjax')
         $aResult = getRiverToAjax($paPDO, $paSRID, $paPoint);
+    // else if ($functionname == 'seacherCity')
+    //     $aResult = seacherCity($paPDO, $paSRID, $name);
 
 
     echo $aResult;
@@ -160,6 +163,27 @@ function getGeoCMRToAjax($paPDO, $paSRID, $paPoint)
         return "null";
 }
 
+//tim kiem
+function seacherCity($paPDO, $paSRID, $name)
+{
+    //echo $paPoint;
+    //echo "<br>";
+    // $name = str_replace(',', ' ', $name);
+    //echo $paPoint;
+    //echo "<br>";
+    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from gadm36_vnm_1 where name_1 like 'Hà Nội'";
+    //echo $mySQLStr;
+    //echo "<br><br>";
+    $result = query($paPDO, $mySQLStr);
+
+    if ($result != null) {
+        // Lặp kết quả
+        foreach ($result as $item) {
+            return $item['geo'];
+        }
+    } else
+        return "null";
+}
 
 
 function getInfoCMRToAjax($paPDO, $paSRID, $paPoint)

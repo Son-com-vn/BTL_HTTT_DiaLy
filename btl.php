@@ -101,16 +101,22 @@
                 <!--<div id="map" style="width: 80vw; height: 100vh;"></div>-->
             </td>
             <td>
+                <input type="textinput" id="ctiy">
+                <button id="btnSeacher" onclick="btnSearch()"> Tìm kiếm</button>
+                <br />
+                <br />
+                <br />
 
-                <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" name="layer" value="hydropower"> Thủy điện<br>
-                <input onclick="oncheckriver();" type="checkbox" id="river" name="layer" value="river"> Sông <br>
-                <input onclick="oncheckvn()" type="checkbox" id="vn" name="layer" value="vn" checked> Việt Nam<br>
+                <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" name="layer" value="hydropower"> Thủy điện<br />
+                <input onclick="oncheckriver();" type="checkbox" id="river" name="layer" value="river"> Sông <br />
+                <input onclick="oncheckvn()" type="checkbox" id="vn" name="layer" value="vn" checked> Việt Nam<br />
 
 
             </td>
         </tr>
     </table>
     <?php include 'CMR_pgsqlAPI.php' ?>
+ 
     <script>
         //$("#document").ready(function () {
         var format = 'image/png';
@@ -131,6 +137,7 @@
         var container = document.getElementById('popup');
         var content = document.getElementById('popup-content');
         var closer = document.getElementById('popup-closer');
+        var ctiy = document.getElementById("ctiy");
         var value = document.getElementById("vn").value;
         /**
          * Create an overlay to anchor the popup to the map.
@@ -148,6 +155,24 @@
             closer.blur();
             return false;
         };
+
+        // function btnSearch() {
+        // $.ajax({
+        //     type: "POST",
+        //     url: "CMR_pgsqlAPI.php",
+        //     //dataType: 'json',
+        //     data: {
+        //         functionname: 'seacherCity',
+        //         name: ctiy.value
+        //     },
+        //     success: function(result, status, erro) {
+        //         highLightObj(result);
+        //     },
+        //     error: function(req, status, error) {
+        //         alert(req + " " + status + " " + error);
+        //     }
+        // });
+        // }
 
         function handleOnCheck(id, layer) {
 
@@ -184,6 +209,23 @@
         }
 
         function initialize_map() {
+            var button = document.getElementById("btnSeacher").addEventListener("click", () => {
+                // $.ajax({
+                //     type: "POST",
+                //     url: "seachAPI.php",
+                //     // dataType: 'json',
+                //     data: {
+                //         functionname: 'seacherCity',
+                //         name: 'Hà Nội'
+                //     },
+                //     success: function(result, status, erro) {
+                //         highLightObj(result);
+                //     },
+                //     error: function(req, status, error) {
+                //         alert(req + " " + status + " " + error);
+                //     }
+                // });
+            });
             //*
             layerBG = new ol.layer.Tile({
                 source: new ol.source.OSM({})
@@ -257,7 +299,7 @@
                     })
                 }),
                 'MultiLineString': new ol.style.Style({
-                   
+
                     stroke: new ol.style.Stroke({
                         color: 'red',
                         width: 3
