@@ -16,6 +16,10 @@ if (isset($_POST['functionname'])) {
         $aResult = getInfoHyproPowerToAjax($paPDO, $paSRID, $paPoint);
     else if ($functionname == 'getGeoEagleToAjax')
         $aResult = getGeoEagleToAjax($paPDO, $paSRID, $paPoint);
+    else if ($functionname == 'getRiverToAjax')
+        $aResult = getRiverToAjax($paPDO, $paSRID, $paPoint);
+
+
     echo $aResult;
 
     closeDB($paPDO);
@@ -194,8 +198,8 @@ function getInfoRiveroAjax($paPDO, $paSRID, $paPoint)
     //echo $paPoint;
     //echo "<br>";
     $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
-    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from thuyhevn2000";
-    $mySQLStr = "SELECT *  from thuyhevn2000 where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
+    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from river";
+    $mySQLStr = "SELECT *  from river where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
     //echo $mySQLStr;
     //echo "<br><br>";
     $result = query($paPDO, $mySQLStr);
@@ -204,8 +208,8 @@ function getInfoRiveroAjax($paPDO, $paSRID, $paPoint)
         $resFin = '<table>';
         // Lặp kết quả
         foreach ($result as $item) {
-            $resFin = $resFin . '<tr><td>Mã đối tương: ' . $item['ten'] . '</td></tr>';
-            $resFin = $resFin . '<tr><td>Chiều dài: ' . $item['chieu_dai'] . '</td></tr>';
+            $resFin = $resFin . '<tr><td>Mã đối tương: ' . $item['name'] . '</td></tr>';
+            $resFin = $resFin . '<tr><td>Chiều dài: ' . $item['length'] . '</td></tr>';
             break;
         }
         $resFin = $resFin . '</table>';
@@ -224,6 +228,28 @@ function getGeoEagleToAjax($paPDO, $paSRID, $paPoint)
     $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
     $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from hydropower_dams";
     $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from hydropower_dams where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
+    //echo $mySQLStr;
+    //echo "<br><br>";
+    $result = query($paPDO, $mySQLStr);
+
+    if ($result != null) {
+        // Lặp kết quả
+        foreach ($result as $item) {
+            return $item['geo'];
+        }
+    } else
+        return "null";
+}
+function getRiverToAjax($paPDO, $paSRID, $paPoint)
+{
+    //echo $paPoint;
+    //echo "<br>";
+    $paPoint = str_replace(',', ' ', $paPoint);
+    //echo $paPoint;
+    //echo "<br>";
+    $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
+    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from river";
+    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from river where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
     //echo $mySQLStr;
     //echo "<br><br>";
     $result = query($paPDO, $mySQLStr);

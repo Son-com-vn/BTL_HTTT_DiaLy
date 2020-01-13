@@ -102,9 +102,9 @@
             </td>
             <td>
 
-                <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" name="layer" value="hydropower"> Thuy Dien<br>
-                <input onclick="oncheckriver();" type="checkbox" id="river" name="layer" value="river"> Song <br>
-                <input onclick="oncheckvn();" type="checkbox" id="vn" name="layer" value="vn" checked> Viet Nam<br>
+                <input onclick="oncheckhydropower();" type="checkbox" id="hydropower" name="layer" value="hydropower"> Thủy điện<br>
+                <input onclick="oncheckriver();" type="checkbox" id="river" name="layer" value="river"> Sông <br>
+                <input onclick="oncheckvn()" type="checkbox" id="vn" name="layer" value="vn" checked> Việt Nam<br>
 
 
             </td>
@@ -212,7 +212,7 @@
                         'FORMAT': format,
                         'VERSION': '1.1.1',
                         STYLES: '',
-                        LAYERS: 'thuyhevn2000',
+                        LAYERS: 'river',
                     }
                 })
 
@@ -249,6 +249,7 @@
             //map.getView().fit(bounds, map.getSize());
 
             var styles = {
+
                 'Point': new ol.style.Style({
                     stroke: new ol.style.Stroke({
                         color: 'yellow',
@@ -256,14 +257,15 @@
                     })
                 }),
                 'MultiLineString': new ol.style.Style({
+                   
                     stroke: new ol.style.Stroke({
-                        color: 'yellow',
+                        color: 'red',
                         width: 3
                     })
                 }),
                 'Polygon': new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: 'yellow',
+                        color: 'red',
                         width: 3
                     })
                 }),
@@ -353,7 +355,26 @@
                 var lon = lonlat[0];
                 var lat = lonlat[1];
                 var myPoint = 'POINT(' + lon + ' ' + lat + ')';
-
+                // var feature = map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+                //     var coordinate = evt.coordinate;
+                //     alert("alo");
+                //     if (layer === layerCMR_adm1) {
+                //         alert("layer1");
+                //     } else if (layer === layer_hydropower) {
+                //         alert("layer2");
+                //         // content2.innerHTML = '<b>Location</b>';
+                //         // overlay.setPosition(coordinate);
+                //     } else if (layer === layer_river) {
+                //         alert("layer3");
+                //         // content3.innerHTML = '<b>Location</b>';
+                //         // overlay.setPosition(coordinate);
+                //     }
+                //     return feature;
+                // });
+                // if (!feature) {
+                //     // overlay.setPosition(undefined);
+                //     // closer.blur();
+                // }
                 if (value == 'vn') {
                     vectorLayer.setStyle(styleFunction);
 
@@ -390,7 +411,7 @@
                     });
                 } else if (value == "river") {
                     //river
-
+                    vectorLayer.setStyle(styleFunction);
                     $.ajax({
                         type: "POST",
                         url: "CMR_pgsqlAPI.php",
@@ -402,6 +423,22 @@
                         },
                         success: function(result, status, erro) {
                             displayObjInfo(result, evt.coordinate);
+                        },
+                        error: function(req, status, error) {
+                            alert(req + " " + status + " " + error);
+                        }
+                    });
+
+                    $.ajax({
+                        type: "POST",
+                        url: "CMR_pgsqlAPI.php",
+                        //dataType: 'json',
+                        data: {
+                            functionname: 'getRiverToAjax',
+                            paPoint: myPoint
+                        },
+                        success: function(result, status, erro) {
+                            highLightObj(result);
                         },
                         error: function(req, status, error) {
                             alert(req + " " + status + " " + error);
