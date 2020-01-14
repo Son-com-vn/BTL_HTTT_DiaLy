@@ -1,9 +1,9 @@
 <?php
+$paPDO = initDB();
+$paSRID = '4326';
 if (isset($_POST['functionname'])) {
-    $paPDO = initDB();
-    $paSRID = '4326';
     $paPoint = $_POST['paPoint'];
-    // $name = $_POST['name'];
+
     $functionname = $_POST['functionname'];
 
     $aResult = "null";
@@ -19,13 +19,15 @@ if (isset($_POST['functionname'])) {
         $aResult = getGeoEagleToAjax($paPDO, $paSRID, $paPoint);
     else if ($functionname == 'getRiverToAjax')
         $aResult = getRiverToAjax($paPDO, $paSRID, $paPoint);
-    // else if ($functionname == 'seacherCity')
-    //     $aResult = seacherCity($paPDO, $paSRID, $name);
-
 
     echo $aResult;
 
     closeDB($paPDO);
+}
+if (isset($_POST['name'])) {
+    $name = $_POST['name'];
+    $aResult = seacherCity($paPDO, $paSRID, $name);
+    echo $aResult;
 }
 
 function initDB()
@@ -61,99 +63,14 @@ function closeDB($paPDO)
     // Ngắt kết nối
     $paPDO = null;
 }
-function example1($paPDO)
-{
-    $mySQLStr = "SELECT getInfoCMRToAjax FROM \"gadm36_vnm_1\"";
-    $result = query($paPDO, $mySQLStr);
 
-    if ($result != null) {
-        // Lặp kết quả
-        foreach ($result as $item) {
-            echo $item['name_0'] . ' - ' . $item['name_1'];
-            echo "<br>";
-        }
-    } else {
-        echo "example1 - null";
-        echo "<br>";
-    }
-    return $result;
-}
-function example2($paPDO)
-{
-    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\"";
-    $result = query($paPDO, $mySQLStr);
-
-    if ($result != null) {
-        // Lặp kết quả
-        foreach ($result as $item) {
-            echo $item['geo'];
-            echo "<br><br>";
-        }
-    } else {
-        echo "example2 - null";
-        echo "<br>";
-    }
-}
-function example3($paPDO, $paSRID, $paPoint)
-{
-    echo $paPoint;
-    echo "<br>";
-    $paPoint = str_replace(',', ' ', $paPoint);
-    echo $paPoint;
-    echo "<br>";
-    //$mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=4326;POINT(12 5)'::geometry,geom)";
-    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=" . $paSRID . ";" . $paPoint . "'::geometry,geom)";
-    echo $mySQLStr;
-    echo "<br><br>";
-    $result = query($paPDO, $mySQLStr);
-
-    if ($result != null) {
-        // Lặp kết quả
-        foreach ($result as $item) {
-            echo $item['geo'];
-            echo "<br><br>";
-        }
-    } else {
-        echo "example2 - null";
-        echo "<br>";
-    }
-}
-function getResult($paPDO, $paSRID, $paPoint)
-{
-    //echo $paPoint;
-    //echo "<br>";
-    $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
-    //$mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=4326;POINT(12 5)'::geometry,geom)";
-    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=" . $paSRID . ";" . $paPoint . "'::geometry,geom)";
-    //echo $mySQLStr;
-    //echo "<br><br>";
-    $result = query($paPDO, $mySQLStr);
-
-    if ($result != null) {
-        // Lặp kết quả
-        foreach ($result as $item) {
-            return $item['geo'];
-        }
-    } else
-        return "null";
-}
-
-
+// hightlight VN
 function getGeoCMRToAjax($paPDO, $paSRID, $paPoint)
 {
-    //echo $paPoint;
-    //echo "<br>";
+    
     $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
-    //$mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=4326;POINT(12 5)'::geometry,geom)";
     $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=4326;" . $paPoint . "'::geometry,geom)";
-    //echo $mySQLStr;
-    //echo "<br><br>";
     $result = query($paPDO, $mySQLStr);
-
     if ($result != null) {
         // Lặp kết quả
         foreach ($result as $item) {
@@ -162,18 +79,15 @@ function getGeoCMRToAjax($paPDO, $paSRID, $paPoint)
     } else
         return "null";
 }
-
-//tim kiem
-function seacherCity($paPDO, $paSRID, $name)
+// hightlight Thuy dien
+function getGeoEagleToAjax($paPDO, $paSRID, $paPoint)
 {
-    //echo $paPoint;
-    //echo "<br>";
-    // $name = str_replace(',', ' ', $name);
-    //echo $paPoint;
-    //echo "<br>";
-    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from gadm36_vnm_1 where name_1 like 'Hà Nội'";
-    //echo $mySQLStr;
-    //echo "<br><br>";
+    
+    $paPoint = str_replace(',', ' ', $paPoint);
+    
+    $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
+    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from hydropower_dams";
+    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from hydropower_dams where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
     $result = query($paPDO, $mySQLStr);
 
     if ($result != null) {
@@ -185,28 +99,43 @@ function seacherCity($paPDO, $paSRID, $name)
         return "null";
 }
 
+// hightlight Song
+function getRiverToAjax($paPDO, $paSRID, $paPoint)
+{
+   
+    $paPoint = str_replace(',', ' ', $paPoint);
+    
+    $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
+    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from river";
+    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from river where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
+    $result = query($paPDO, $mySQLStr);
 
+    if ($result != null) {
+        // Lặp kết quả
+        foreach ($result as $item) {
+            return $item['geo'];
+        }
+    } else
+        return "null";
+}
+
+// Truy van thong tin VN
 function getInfoCMRToAjax($paPDO, $paSRID, $paPoint)
 {
-    //echo $paPoint;
-    //echo "<br>";
+   
     $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
-    //$mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=4326;POINT(12 5)'::geometry,geom)";
-    //$mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from \"gadm36_vnm_1\" where ST_Within('SRID=".$paSRID.";".$paPoint."'::geometry,geom)";
-    $mySQLStr = "SELECT gid, name_1, ST_Area(geom) dt from \"gadm36_vnm_1\" where ST_Within('SRID=4326;" . $paPoint . "'::geometry,geom)";
-    //echo $mySQLStr;
-    //echo "<br><br>";
+    $mySQLStr = "SELECT gid, name_1, ST_Area(geom) dt, ST_Perimeter(geom) as cv from \"gadm36_vnm_1\" where ST_Within('SRID=4326;" . $paPoint . "'::geometry,geom)";
+    
     $result = query($paPDO, $mySQLStr);
 
     if ($result != null) {
         $resFin = '<table>';
         // Lặp kết quả
         foreach ($result as $item) {
-            $resFin = $resFin . '<tr><td>id_1: ' . $item['gid'] . '</td></tr>';
-            $resFin = $resFin . '<tr><td>Ma vung: ' . $item['name_1'] . '</td></tr>';
-            $resFin = $resFin . '<tr><td>Dien tich: ' . $item['dt'] . '</td></tr>';
+            $resFin = $resFin . '<tr><td>Mã Vùng: ' . $item['gid'] . '</td></tr>';
+            $resFin = $resFin . '<tr><td>Tên Tỉnh: ' . $item['name_1'] . '</td></tr>';
+            $resFin = $resFin . '<tr><td>Diện Tích: ' . $item['dt'] . ' km2 ' .'</td></tr>';
+            $resFin = $resFin . '<tr><td>Chu vi: ' . $item['cv'] . ' km '.'</td></tr>';
             break;
         }
         $resFin = $resFin . '</table>';
@@ -215,24 +144,20 @@ function getInfoCMRToAjax($paPDO, $paSRID, $paPoint)
         return "null";
 }
 
-//get inforriver
+//Truy van thong tin Song 
 function getInfoRiveroAjax($paPDO, $paSRID, $paPoint)
 {
     $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
     $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
     $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from river";
     $mySQLStr = "SELECT *  from river where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
-    //echo $mySQLStr;
-    //echo "<br><br>";
     $result = query($paPDO, $mySQLStr);
 
     if ($result != null) {
         $resFin = '<table>';
         // Lặp kết quả
         foreach ($result as $item) {
-            $resFin = $resFin . '<tr><td>Mã đối tương: ' . $item['name'] . '</td></tr>';
+            $resFin = $resFin . '<tr><td>Tên Sông: ' . $item['name'] . '</td></tr>';
             $resFin = $resFin . '<tr><td>Chiều dài: ' . $item['length'] . '</td></tr>';
             break;
         }
@@ -242,62 +167,14 @@ function getInfoRiveroAjax($paPDO, $paSRID, $paPoint)
         return "null";
 }
 
-function getGeoEagleToAjax($paPDO, $paSRID, $paPoint)
-{
-    //echo $paPoint;
-    //echo "<br>";
-    $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
-    $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
-    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from hydropower_dams";
-    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from hydropower_dams where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
-    //echo $mySQLStr;
-    //echo "<br><br>";
-    $result = query($paPDO, $mySQLStr);
-
-    if ($result != null) {
-        // Lặp kết quả
-        foreach ($result as $item) {
-            return $item['geo'];
-        }
-    } else
-        return "null";
-}
-function getRiverToAjax($paPDO, $paSRID, $paPoint)
-{
-    //echo $paPoint;
-    //echo "<br>";
-    $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
-    $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
-    $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from river";
-    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from river where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
-    //echo $mySQLStr;
-    //echo "<br><br>";
-    $result = query($paPDO, $mySQLStr);
-
-    if ($result != null) {
-        // Lặp kết quả
-        foreach ($result as $item) {
-            return $item['geo'];
-        }
-    } else
-        return "null";
-}
+// truy van thong tin thuy dien
 function getInfoHyproPowerToAjax($paPDO, $paSRID, $paPoint)
 {
-    //echo $paPoint;
-    //echo "<br>";
     $paPoint = str_replace(',', ' ', $paPoint);
-    //echo $paPoint;
-    //echo "<br>";
     $strDistance = "ST_Distance('" . $paPoint . "',ST_AsText(geom))";
     $strMinDistance = "SELECT min(ST_Distance('" . $paPoint . "',ST_AsText(geom))) from hydropower_dams";
     $mySQLStr = "SELECT * from hydropower_dams where " . $strDistance . " = (" . $strMinDistance . ") and " . $strDistance . " < 0.05";
-    //echo $mySQLStr;
-    //echo "<br><br>";
+
     $result = query($paPDO, $mySQLStr);
 
     if ($result != null) {
@@ -311,6 +188,22 @@ function getInfoHyproPowerToAjax($paPDO, $paSRID, $paPoint)
         }
         $resFin = $resFin . '</table>';
         return $resFin;
+    } else
+        return "null";
+}
+
+//tim kiem
+function seacherCity($paPDO, $paSRID, $name)
+{
+    
+    $mySQLStr = "SELECT ST_AsGeoJson(geom) as geo from gadm36_vnm_1 where name_1 like '$name'";
+    $result = query($paPDO, $mySQLStr);
+
+    if ($result != null) {
+        // Lặp kết quả
+        foreach ($result as $item) {
+            return $item['geo'];
+        }
     } else
         return "null";
 }
